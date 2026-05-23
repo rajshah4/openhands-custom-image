@@ -125,6 +125,14 @@ Why the custom run started faster:
 - native packages already present
 - headless test support via `xvfb` already present
 
+Stock benchmark helper now available:
+
+- the benchmark branch now includes repo-local helpers to reduce agent guesswork on the stock image:
+  - `./scripts/openhands-stock-bootstrap.sh`
+  - `./scripts/openhands-benchmark-status.sh`
+  - `./scripts/openhands-benchmark-verify.sh`
+- those scripts make the stock path more reproducible by emitting phase logs, skipping already-completed bootstrap phases, and wrapping the exact targeted verification command
+
 Important caveat:
 
 - the captured stock run was enough to show the setup penalty, but it did not complete end-to-end
