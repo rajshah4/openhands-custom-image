@@ -94,10 +94,27 @@ Why the stock run slowed down:
 - clone and branch checkout
 - repo inspection and test-runner discovery
 - dependency/test bootstrap from `scripts/test.sh`
-- then a missing native dependency:
-  - `gssapi/gssapi.h`
-  - attempted package install:
-    - `apt-get install -y libkrb5-dev`
+- then repeated missing-environment discovery across stock-image reruns:
+  - first missing native dependency:
+    - `gssapi/gssapi.h`
+    - required package:
+      - `libkrb5-dev`
+  - next missing test/runtime dependencies:
+    - `xvfb`
+    - `pkg-config`
+    - `libx11-dev`
+    - `libxkbfile-dev`
+  - after those packages were installed, the repo still was not in a runnable test state because the compiled output tree was missing:
+    - `out/vs/base/common/`
+
+What this means for the stock-image path:
+
+- the stock baseline had to pay three separate bootstrap costs:
+  - clone and checkout
+  - install native/system dependencies
+  - generate the transpiled/build output needed for the requested VS Code test path
+- the benchmark did not stall on the bug itself
+- it stalled because the repo environment was still being assembled
 
 Why the custom run started faster:
 
@@ -113,6 +130,11 @@ Important caveat:
 - the captured stock run was enough to show the setup penalty, but it did not complete end-to-end
 - the custom run completed, but the agent used a pragmatic shortcut by editing the compiled JS under `out/` after confirming the TS-side root cause
 - a stricter future benchmark should add a faster explicit recompilation path so the agent can fix TypeScript source and rerun verification without that detour
+- if you want a fully guided stock baseline, the stock prompt should explicitly permit:
+  - system package installs with `sudo`
+  - `npm install`
+  - `npm run gulp transpile-client-esbuild transpile-extensions`
+  - `npm run electron`
 
 ## What is public and safe to share
 
