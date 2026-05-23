@@ -1,59 +1,44 @@
 # OpenHands Custom Sandbox Images
 
-This repo is a customer-shareable benchmark for showing why custom OpenHands sandbox images matter.
+Custom sandbox images let you preload the repo, dependencies, docs, and test harness your agent needs, so it starts near the engineering task instead of spending minutes provisioning a workspace.
 
-The core idea is simple:
+## Why use a custom image
 
-- a stock sandbox spends agent time on environment assembly
-- a custom sandbox starts much closer to meaningful engineering work
+- `Faster path to useful work`
+  The agent can reach the real task quickly instead of burning time on clone, install, transpile, and bootstrap steps.
 
-That matters most when you have:
-
-- large monorepos
-- complicated test harnesses
-- internal CLIs, policy checks, or SDKs
-- docs and runbooks the agent needs to search
-- expensive or fragile bootstrap steps
-
-## Why you want a custom image
-
-Custom images are useful when the problem is not just “can the agent edit code,” but “how much setup must happen before the agent can even start.”
-
-The practical benefits are:
-
-- `Faster time to first useful test`
-  The agent reaches a failing verification step much sooner.
 - `Easier monorepo workflows`
   Repo checkout, dependencies, transpiled output, and helper tooling can already be present.
-- `Easier test harness workflows`
-  Native packages, headless browser support, Electron artifacts, or org-specific wrappers can be prebaked.
-- `Lower setup variance`
-  Each run does not need to rediscover the same bootstrap steps.
-- `Better reliability`
-  Removing cold-start setup reduces the odds of agent stalls, OOMs, and half-finished bootstrap work.
-- `Better use of agent time`
-  The agent spends more time debugging and less time acting like a provisioning script.
+
+- `Easier complex test harness workflows`
+  Native packages, headless browser support, Electron artifacts, and org-specific wrappers can be prebaked.
+
+- `Lower setup variance and better reliability`
+  Each run does not need to rediscover the same bootstrap steps, which reduces stalls, OOMs, and half-finished setup.
+
+- `Better token efficiency`
+  Fewer tokens are spent on provisioning work, so more of the context budget goes to the actual task.
 
 ## Published benchmark
 
-The strongest benchmark in this repo is a public-repo comparison built around a pinned VS Code fork:
+The main benchmark in this repo uses a pinned public VS Code fork with a real test harness:
 
 - repo: `https://github.com/rajshah4/vscode-benchmark-repo`
 - branch: `openhands-benchmark-01`
+- checked-out working tree: about `408 MB`
+- files: about `14.8k`
+- directories: about `4.3k`
 - bug location:
   - `src/vs/platform/configuration/common/configurationModels.ts`
 - targeted verification:
   - `./scripts/test.sh --run src/vs/platform/configuration/test/common/configurationModels.test.ts --grep "excluded restricted properties"`
 
-Benchmark repo shape:
+Important context:
 
-- checked-out working tree: about `408 MB`
-- files: about `14.8k`
-- directories: about `4.3k`
+- the stock sandbox needed `6 GiB` of runtime memory to complete cold bootstrap reliably
+- the custom-image run completed with a `2 GiB` sandbox because the repo and harness were already prebaked
 
-These numbers are before stock-image dependency installation, transpilation, and extra runtime artifacts.
-
-Published custom image tag used for the custom run:
+Historical custom image used in the benchmark run:
 
 - `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
 
@@ -61,9 +46,13 @@ Latest rebuilt benchmark image with the current helper scripts:
 
 - `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v3`
 
-### Results
+![VS Code benchmark results](assets/vscode-benchmark-results.svg)
 
-The completed stock run and successful custom run produced these timings:
+Biggest results:
+
+- `11m 10s` faster to first useful test output
+- `10m 10s` faster end to end
+- `9m 28s` less harness bootstrap after repo access
 
 | Metric | Stock image | Custom image | Savings |
 | --- | ---: | ---: | ---: |
@@ -76,89 +65,40 @@ What these metrics mean:
 
 - `Repo available in workspace`
   The repo exists and is accessible where the agent expects to work.
+
 - `First targeted test output`
   The agent has reached the exact requested verification command and received useful output from it.
+
 - `Bootstrap after repo access`
-  The setup gap between “repo exists” and “the real test is running.”
+  The setup gap between "repo exists" and "the real test is running."
+
 - `End-to-end task completion`
   Full task span, including setup, diagnosis, edits, reruns, and final summary.
 
 ### What the results mean
 
-The biggest win was not raw clone speed.
+The biggest win is not raw clone speed. The main bottleneck was getting the environment and test harness into a runnable state.
 
-The biggest win was avoiding test-harness bootstrap:
+In the completed stock run, the expensive setup looked roughly like this:
 
-- stock image needed about `9m 41s` after checkout just to reach the first useful test output
-- custom image reached the same point in about `26.5s`
-
-The stock bootstrap was dominated by:
-
+- clone and checkout: about `115s`
 - `npm install`: about `525s`
-- transpile step: about `28s`
+- transpile: about `28s`
 - Electron prep: about `5s`
 
-Once both environments reached the actual bug-fix loop, the gap was much smaller:
+Once both environments were ready, the actual bug-fix loop was much smaller than the cold-start setup tax. That is the real value of a custom sandbox image: less environment assembly, faster verification, and more reliable agent runs.
 
-- stock run:
-  - about `132.7s` from first failing test to passing verification
-- custom run:
-  - about `181.6s` from first failing test to passing verification
-
-That is the point of the benchmark:
-
-- the hard part was not the code fix
-- the hard part was getting the environment and harness into a runnable state
-
-### Operational story
-
-This benchmark also exposed a reliability point, not just a speed point.
-
-Earlier stock-image runs hit runtime restarts because the sandbox was cold-starting a heavy repo and test stack inside a smaller memory limit. The stable stock comparison only became reliable after increasing sandbox memory to `6 GiB`.
-
-That is part of the value story:
-
-- stock image pushed more setup work into the live sandbox
-- custom image removed much of that work up front
-- that reduced both elapsed time and runtime pressure
-
-## What this repo demonstrates
-
-This repo now supports two useful stories.
-
-### 1. Public credibility benchmark
-
-The VS Code benchmark demonstrates:
-
-- a real public repo
-- a real contributor-style setup path
-- a real targeted verification command
-- a measurable difference between cold stock bootstrap and prebaked custom setup
-
-Relevant files:
+Related benchmark docs:
 
 - [vscode-benchmark/README.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/vscode-benchmark/README.md)
 - [benchmarks/vscode-benchmark-plan.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/vscode-benchmark-plan.md)
 - [benchmarks/analyze_conversation_export.py](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/analyze_conversation_export.py)
 
-### 2. Synthetic enterprise demo
-
-The synthetic fintech demo demonstrates:
-
-- prebaked repo contents
-- prebaked docs search
-- prebaked org-style verification tooling
-- large-workspace simulation
-
-That demo is useful for local iteration and for showing how to package your own internal tooling.
-
-Relevant files:
-
-- [Dockerfile](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/Dockerfile)
-- [README-demo.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/README-demo.md)
-- Canonical OpenHands sandbox image guide: https://docs.openhands.dev/sdk/guides/agent-server/docker-sandbox
-
 ## Build your own custom image
+
+Canonical OpenHands sandbox image guide:
+
+- https://docs.openhands.dev/sdk/guides/agent-server/docker-sandbox
 
 The basic pattern is:
 
@@ -178,8 +118,6 @@ Important rule:
 
 - preserve normal OpenHands agent-server behavior
 - extend the image; do not replace the runtime contract with a custom entrypoint
-- for the canonical base-image and sandbox-image guidance, use:
-  https://docs.openhands.dev/sdk/guides/agent-server/docker-sandbox
 
 ### Example: VS Code benchmark image
 
@@ -203,20 +141,7 @@ That image prebakes:
 - native packages such as `xvfb`, `libkrb5-dev`, `pkg-config`, `libx11-dev`, and `libxkbfile-dev`
 - repo-local verification wrappers
 
-### Example: synthetic enterprise image
-
-Build the synthetic demo image:
-
-```bash
-docker buildx build \
-  --platform linux/amd64 \
-  --build-arg DEMO_PROFILE=heavy \
-  -t ghcr.io/<owner>/openhands-custom-image:enterprise-demo \
-  --push \
-  .
-```
-
-## Configure Replicated
+## Configure Replicated VM Installer
 
 In the Replicated installer, set:
 
@@ -229,7 +154,7 @@ In the Replicated installer, set:
 
 This feature is specifically for the sandbox / agent-server image, not every OpenHands service image.
 
-## Reproduce the published VS Code benchmark
+## Reproduce the VS Code benchmark
 
 ### Stock image run
 
@@ -299,19 +224,3 @@ That lets you compare:
   VS Code-specific image build and reproduction details.
 - [benchmarks/vscode-benchmark-plan.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/vscode-benchmark-plan.md)
   Benchmark design notes and task choices.
-- [README-demo.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/README-demo.md)
-  Synthetic enterprise demo details.
-
-## Safe to share
-
-Everything in this repo is synthetic or public-benchmark-oriented:
-
-- synthetic docs and workload for the fintech demo
-- public pinned benchmark fork for the VS Code comparison
-- no customer or production data
-
-That makes the repo suitable for:
-
-- sharing with customers
-- using as a benchmark reference
-- adapting into your own custom sandbox image workflow
