@@ -59,12 +59,6 @@ In the completed stock run, the expensive setup looked roughly like this:
 
 Once both environments were ready, the actual bug-fix loop was much smaller than the cold-start setup tax. That is the real value of a custom sandbox image: less environment assembly, faster verification, and more reliable agent runs.
 
-Related benchmark docs:
-
-- [vscode-benchmark/README.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/vscode-benchmark/README.md)
-- [benchmarks/vscode-benchmark-plan.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/vscode-benchmark-plan.md)
-- [benchmarks/analyze_conversation_export.py](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/analyze_conversation_export.py)
-
 ## Build your own custom image
 
 Canonical OpenHands sandbox image guide:
@@ -188,10 +182,3 @@ That lets you compare:
 - time to first useful test
 - time to passing verification
 - total conversation span
-
-## Additional docs
-
-- [vscode-benchmark/README.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/vscode-benchmark/README.md)
-  VS Code-specific image build and reproduction details.
-- [benchmarks/vscode-benchmark-plan.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/vscode-benchmark-plan.md)
-  Benchmark design notes and task choices.
