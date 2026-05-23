@@ -49,9 +49,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd
 
-COPY bin/prepare-vscode-benchmark /usr/local/bin/prepare-vscode-benchmark
-COPY bin/vscode-benchmark-verify /usr/local/bin/vscode-benchmark-verify
-COPY README.md /opt/vscode-benchmark-image/README.md
+COPY vscode-benchmark/bin/prepare-vscode-benchmark /usr/local/bin/prepare-vscode-benchmark
+COPY vscode-benchmark/bin/vscode-benchmark-verify /usr/local/bin/vscode-benchmark-verify
+COPY vscode-benchmark/README.md /opt/vscode-benchmark-image/README.md
 
 RUN chmod +x \
         /usr/local/bin/prepare-vscode-benchmark \
