@@ -166,9 +166,20 @@ Then configure Replicated with:
 - `Registry Username`: only if needed
 - `Registry Password or Credentials`: only if needed
 
-## Benchmarking
+## Local smoke check
 
-Run the local benchmark harness:
+The local harness is optional.
+
+It is useful for quickly validating that:
+
+- workspace hydration works
+- doc search works
+- verification works
+- the custom image is meaningfully faster on the synthetic demo
+
+It is not the main customer-facing proof point. The stronger benchmark is the public-repo VS Code comparison later in this README.
+
+Run the local harness if you want a fast sanity check while developing the image:
 
 ```bash
 /Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/compare-image-startup.sh \
@@ -186,7 +197,7 @@ What it measures:
 - `custom first test signal`
   - time until the prewarmed image can produce that same failing signal
 
-Validated local result from the updated hydration model on the `light` profile:
+Example local result from the updated hydration model on the `light` profile:
 
 - `standard readiness`: `4.702s`
 - `custom readiness`: `0.504s`
@@ -195,7 +206,7 @@ Validated local result from the updated hydration model on the `light` profile:
 - `readiness speedup`: `9.33x`
 - `feedback speedup`: `5.06x`
 
-These are laptop-friendly validation numbers, not the final enterprise story.
+These are laptop-friendly validation numbers, not the primary enterprise benchmark.
 
 ## Public repo benchmark
 
