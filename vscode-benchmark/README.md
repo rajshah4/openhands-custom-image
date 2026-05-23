@@ -13,6 +13,10 @@ It is meant to show that custom sandbox images do more than speed up clone time.
 
 That moves the agent from environment assembly to actual debugging much faster.
 
+Canonical OpenHands sandbox image guide:
+
+- https://docs.openhands.dev/sdk/guides/agent-server/docker-sandbox
+
 Published benchmark image tag used in the custom run:
 
 - `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
