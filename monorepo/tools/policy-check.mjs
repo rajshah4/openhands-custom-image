@@ -15,9 +15,18 @@ assertIncludes(join(repoRoot, "AGENTS.md"), "company-verify", "company-verify in
 assertIncludes(join(repoRoot, "docs", "payments-pricing.md"), "175", "documented premium effective fee");
 assertIncludes(join(repoRoot, "docs", "release-guidance.md"), "FIN-4821", "release change ticket");
 
-const indexStat = statSync(join(repoRoot, "tools", "doc-search-index.json"));
-if (indexStat.size <= 0) {
-  console.error("policy-check failed: doc-search-index.json is empty");
+const indexDir = join(repoRoot, "tools", "doc-search-index");
+const metadataPath = join(indexDir, "metadata.json");
+
+const indexStat = statSync(indexDir);
+if (!indexStat.isDirectory()) {
+  console.error("policy-check failed: tools/doc-search-index is not a directory");
+  process.exit(1);
+}
+
+const metadataStat = statSync(metadataPath);
+if (metadataStat.size <= 0) {
+  console.error("policy-check failed: tools/doc-search-index/metadata.json is empty");
   process.exit(1);
 }
 

@@ -4,17 +4,25 @@ set -euo pipefail
 repo_root="${FINTECH_MONOREPO_ROOT:-/workspace/fintech-monorepo}"
 seed_root="${FINTECH_MONOREPO_SEED_ROOT:-/opt/fintech-monorepo-seed}"
 
-if [[ -f "$repo_root/package.json" && -d "$repo_root/tools" ]]; then
-  exit 0
-fi
+is_complete_repo() {
+  [[ -e "$repo_root/package.json" ]] \
+    && [[ -e "$repo_root/tools/build-doc-index.py" ]] \
+    && [[ -e "$repo_root/tools/doc-search-index" ]] \
+    && [[ -e "$repo_root/services/payments/src/index.js" ]] \
+    && [[ -e "$repo_root/packages/contracts/src/index.js" ]]
+}
 
 if [[ ! -d "$seed_root" ]]; then
   echo "seed monorepo not found at $seed_root" >&2
   exit 1
 fi
 
+if is_complete_repo; then
+  exit 0
+fi
+
 mkdir -p "$(dirname "$repo_root")"
 rm -rf "$repo_root"
-cp -R "$seed_root" "$repo_root"
+ln -s "$seed_root" "$repo_root"
 
-echo "hydrated fintech monorepo to $repo_root"
+echo "linked fintech monorepo seed at $repo_root"
