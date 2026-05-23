@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+seed_root="${VSCODE_BENCHMARK_SEED_ROOT:-/opt/vscode-benchmark-repo}"
+workspace_root="${VSCODE_BENCHMARK_WORKSPACE_ROOT:-/workspace/vscode-benchmark}"
+
+if [[ ! -d "${seed_root}" ]]; then
+  echo "VS Code benchmark seed repo not found at ${seed_root}" >&2
+  exit 1
+fi
+
+if [[ -L "${workspace_root}" ]]; then
+  exit 0
+fi
+
+if [[ -e "${workspace_root}" ]]; then
+  if [[ -f "${workspace_root}/package.json" && -f "${workspace_root}/OPENHANDS_BENCHMARK.md" ]]; then
+    exit 0
+  fi
+  echo "Workspace path ${workspace_root} already exists and is not the benchmark repo." >&2
+  exit 1
+fi
+
+mkdir -p "$(dirname "${workspace_root}")"
+ln -s "${seed_root}" "${workspace_root}"

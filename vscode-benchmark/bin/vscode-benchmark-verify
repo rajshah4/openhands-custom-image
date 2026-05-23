@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+prepare-vscode-benchmark
+cd "${VSCODE_BENCHMARK_WORKSPACE_ROOT:-/workspace/vscode-benchmark}"
+
+./scripts/test.sh \
+  --run src/vs/platform/configuration/test/common/configurationModels.test.ts \
+  --grep "excluded restricted properties"

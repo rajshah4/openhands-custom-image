@@ -46,6 +46,8 @@ That makes it suitable for:
   - hydrates `/workspace/fintech-monorepo` from the prebaked seed
 - `benchmarks/compare-image-startup.sh`
   - local benchmark harness
+- `vscode-benchmark/`
+  - VS Code-specific custom image variant and helpers for the public repo benchmark
 
 ## Why the repo is hydrated at runtime
 
@@ -194,6 +196,15 @@ Validated local result from the updated hydration model on the `light` profile:
 - `feedback speedup`: `5.06x`
 
 These are laptop-friendly validation numbers, not the final enterprise story.
+
+## Public repo benchmark
+
+For a real public-repo credibility benchmark, use the VS Code plan in:
+
+- `benchmarks/vscode-benchmark-plan.md`
+- `vscode-benchmark/README.md`
+
+That benchmark is designed to show the value of a prewarmed sandbox on a large public repo with real setup and real test infrastructure, rather than just synthetic ballast.
 
 ## Replicated A/B test protocol
 
