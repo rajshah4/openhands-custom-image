@@ -51,8 +51,8 @@ Observed timings:
 | --- | ---: | ---: | ---: |
 | Repo available in workspace | `100.8s` | `13.1s` | `87.7s` |
 | First targeted test execution | `279.4s` | `26.5s` | `252.9s` |
-| Test bootstrap after repo access | `178.6s` | `13.5s` | `165.1s` |
-| Time from first targeted test execution to task completion | incomplete in captured run | `212.4s` | n/a |
+| Test bootstrap after repo access, before any code fix | `178.6s` | `13.5s` | `165.1s` |
+| Engineering loop after first test: diagnosis, code fix, reruns | incomplete in captured run | `212.4s` | n/a |
 | Completed task span | incomplete in captured run | `238.9s` | n/a |
 
 What `First targeted test execution` means:
@@ -61,6 +61,18 @@ What `First targeted test execution` means:
 - it is the clearest “time to real work” metric in this README
 - it is not just “the repo exists”
 - it is not just “the agent started thinking”
+
+What `Test bootstrap after repo access, before any code fix` means:
+
+- this is not the bug-fix phase
+- it is only the setup gap between “the repo is accessible” and “the requested benchmark test is actually running”
+- it covers things like test discovery, dependency/bootstrap work, and getting the test runner into a usable state
+
+What `Engineering loop after first test` means:
+
+- this is the actual bug-fix phase
+- it starts only after the agent has already reached the requested test and seen useful output
+- it includes diagnosis, code edits, rerunning verification, and final reporting
 
 What `Completed task span` means:
 
