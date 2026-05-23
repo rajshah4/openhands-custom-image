@@ -152,6 +152,7 @@ Relevant files:
 
 - [Dockerfile](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/Dockerfile)
 - [README-demo.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/README-demo.md)
+- Canonical OpenHands sandbox image guide: https://docs.openhands.dev/sdk/guides/agent-server/docker-sandbox
 
 ## Build your own custom image
 
@@ -173,6 +174,8 @@ Important rule:
 
 - preserve normal OpenHands agent-server behavior
 - extend the image; do not replace the runtime contract with a custom entrypoint
+- for the canonical base-image and sandbox-image guidance, use:
+  https://docs.openhands.dev/sdk/guides/agent-server/docker-sandbox
 
 ### Example: VS Code benchmark image
 
