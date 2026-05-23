@@ -217,6 +217,14 @@ For a real public-repo credibility benchmark, use the VS Code plan in:
 
 That benchmark is designed to show the value of a prewarmed sandbox on a large public repo with real setup and real test infrastructure, rather than just synthetic ballast.
 
+Benchmark repo shape for context:
+
+- checked-out working tree: about `408 MB`
+- files in the shallow benchmark checkout: about `14.8k`
+- directories in the shallow benchmark checkout: about `4.3k`
+
+These numbers are for the pinned benchmark repo before stock-image dependency installation, transpilation, or extra test artifacts. The custom image also prebakes `node_modules`, transpiled output, Electron artifacts, and native packages needed for the test flow.
+
 ### VS Code benchmark results
 
 We validated the public-repo benchmark against a pinned VS Code fork and a small intentional regression in:
