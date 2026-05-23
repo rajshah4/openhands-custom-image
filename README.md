@@ -1,435 +1,310 @@
-# OpenHands Custom Sandbox Benchmark Demo
+# OpenHands Custom Sandbox Images
 
-This repo is a customer-shareable benchmark for demonstrating the value of custom OpenHands sandbox images.
+This repo is a customer-shareable benchmark for showing why custom OpenHands sandbox images matter.
 
-It gives you two comparison modes:
+The core idea is simple:
 
-- `blank sandbox`
-  - clone or copy the seed repo into a fresh workspace
-  - install dependencies
-  - install doc-search dependencies
-  - build the documentation index
-  - run verification to get the first useful failure
-- `custom sandbox`
-  - start from an image that already contains the repo seed, dependencies, docs corpus, verification tooling, and a prebuilt search index
-  - hydrate the live OpenHands workspace from the prebaked seed
-  - get to the first useful failure much faster
+- a stock sandbox spends agent time on environment assembly
+- a custom sandbox starts much closer to meaningful engineering work
 
-## Results at a glance
+That matters most when you have:
 
-The strongest benchmark in this repo is the public-repo VS Code comparison.
+- large monorepos
+- complicated test harnesses
+- internal CLIs, policy checks, or SDKs
+- docs and runbooks the agent needs to search
+- expensive or fragile bootstrap steps
 
-We ran the same bug-fix task in two environments:
+## Why you want a custom image
 
-- `stock sandbox image`
-  - clone the benchmark repo
-  - bootstrap the repo
-  - reach the requested test command the hard way
-- `custom sandbox image`
-  - start with the pinned repo, dependencies, transpiled output, Electron artifacts, and native test dependencies already baked in
+Custom images are useful when the problem is not just “can the agent edit code,” but “how much setup must happen before the agent can even start.”
 
-The benchmark task was:
+The practical benefits are:
 
-- repo:
-  - pinned VS Code benchmark fork
+- `Faster time to first useful test`
+  The agent reaches a failing verification step much sooner.
+- `Easier monorepo workflows`
+  Repo checkout, dependencies, transpiled output, and helper tooling can already be present.
+- `Easier test harness workflows`
+  Native packages, headless browser support, Electron artifacts, or org-specific wrappers can be prebaked.
+- `Lower setup variance`
+  Each run does not need to rediscover the same bootstrap steps.
+- `Better reliability`
+  Removing cold-start setup reduces the odds of agent stalls, OOMs, and half-finished bootstrap work.
+- `Better use of agent time`
+  The agent spends more time debugging and less time acting like a provisioning script.
+
+## Published benchmark
+
+The strongest benchmark in this repo is a public-repo comparison built around a pinned VS Code fork:
+
+- repo: `https://github.com/rajshah4/vscode-benchmark-repo`
+- branch: `openhands-benchmark-01`
 - bug location:
   - `src/vs/platform/configuration/common/configurationModels.ts`
-- requested verification command:
+- targeted verification:
   - `./scripts/test.sh --run src/vs/platform/configuration/test/common/configurationModels.test.ts --grep "excluded restricted properties"`
 
-Benchmark repo shape for context:
+Benchmark repo shape:
 
 - checked-out working tree: about `408 MB`
-- files in the shallow benchmark checkout: about `14.8k`
-- directories in the shallow benchmark checkout: about `4.3k`
+- files: about `14.8k`
+- directories: about `4.3k`
 
-These numbers are for the pinned benchmark repo before stock-image dependency installation, transpilation, or extra test artifacts.
+These numbers are before stock-image dependency installation, transpilation, and extra runtime artifacts.
 
-Observed timings:
+Published custom image tag used for the custom run:
+
+- `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
+
+### Results
+
+The completed stock run and successful custom run produced these timings:
 
 | Metric | Stock image | Custom image | Savings |
 | --- | ---: | ---: | ---: |
-| Repo available in workspace | `100.8s` | `13.1s` | `87.7s` |
-| First targeted test execution | `279.4s` | `26.5s` | `252.9s` |
-| Test bootstrap after repo access, before any code fix | `178.6s` | `13.5s` | `165.1s` |
-| Engineering loop after first test: diagnosis, code fix, reruns | incomplete in captured run | `212.4s` | n/a |
-| Completed task span | incomplete in captured run | `238.9s` | n/a |
+| Repo available in workspace | `115.2s` | `13.1s` | `102.1s` |
+| First targeted test output | `696.5s` | `26.5s` | `670.0s` |
+| Bootstrap after repo access, before first useful test | `581.4s` | `13.5s` | `567.9s` |
+| End-to-end task completion | `848.7s` | `238.9s` | `609.8s` |
 
-What `First targeted test execution` means:
+What these metrics mean:
 
-- this is the first point where the agent actually reached the specific benchmark test command above and got useful output from it
-- it is the clearest “time to real work” metric in this README
-- it is not just “the repo exists”
-- it is not just “the agent started thinking”
+- `Repo available in workspace`
+  The repo exists and is accessible where the agent expects to work.
+- `First targeted test output`
+  The agent has reached the exact requested verification command and received useful output from it.
+- `Bootstrap after repo access`
+  The setup gap between “repo exists” and “the real test is running.”
+- `End-to-end task completion`
+  Full task span, including setup, diagnosis, edits, reruns, and final summary.
 
-What `Test bootstrap after repo access, before any code fix` means:
+### What the results mean
 
-- this is not the bug-fix phase
-- it is only the setup gap between “the repo is accessible” and “the requested benchmark test is actually running”
-- it covers things like test discovery, dependency/bootstrap work, and getting the test runner into a usable state
+The biggest win was not raw clone speed.
 
-What `Engineering loop after first test` means:
+The biggest win was avoiding test-harness bootstrap:
 
-- this is the actual bug-fix phase
-- it starts only after the agent has already reached the requested test and seen useful output
-- it includes diagnosis, code edits, rerunning verification, and final reporting
+- stock image needed about `9m 41s` after checkout just to reach the first useful test output
+- custom image reached the same point in about `26.5s`
 
-What `Completed task span` means:
+The stock bootstrap was dominated by:
 
-- this is the full wall-clock duration of the custom run
-- it includes reading the repo, diagnosing the bug, editing files, rerunning verification, and writing the final summary
-- it is a different phase from “time to first targeted test execution”
-- the stock run did not complete, so there is no apples-to-apples total-span comparison yet
+- `npm install`: about `525s`
+- transpile step: about `28s`
+- Electron prep: about `5s`
 
-What the numbers show:
+Once both environments reached the actual bug-fix loop, the gap was much smaller:
 
-- the savings are not mainly about `git clone`
-- the bigger win is avoiding the environment/bootstrap work between “repo exists” and “the agent can run the requested test”
-- in this benchmark, the custom image saved about `4m 13s` to the first targeted test execution
-- it also saved about `2m 45s` of test bootstrap work after the repo was already available
-- the custom run still spent about `3m 32s` after the first test on the actual engineering loop: diagnosis, edits, and reruns
+- stock run:
+  - about `132.7s` from first failing test to passing verification
+- custom run:
+  - about `181.6s` from first failing test to passing verification
 
-Why the stock run slowed down:
+That is the point of the benchmark:
 
-- clone and branch checkout
-- repo inspection and test-runner discovery
-- dependency/test bootstrap from `scripts/test.sh`
-- then repeated missing-environment discovery across stock-image reruns:
-  - first missing native dependency:
-    - `gssapi/gssapi.h`
-    - required package:
-      - `libkrb5-dev`
-  - next missing test/runtime dependencies:
-    - `xvfb`
-    - `pkg-config`
-    - `libx11-dev`
-    - `libxkbfile-dev`
-  - after those packages were installed, the repo still was not in a runnable test state because the compiled output tree was missing:
-    - `out/vs/base/common/`
+- the hard part was not the code fix
+- the hard part was getting the environment and harness into a runnable state
 
-What this means for the stock-image path:
+### Operational story
 
-- the stock baseline had to pay three separate bootstrap costs:
-  - clone and checkout
-  - install native/system dependencies
-  - generate the transpiled/build output needed for the requested VS Code test path
-- the benchmark did not stall on the bug itself
-- it stalled because the repo environment was still being assembled
+This benchmark also exposed a reliability point, not just a speed point.
 
-Why the custom run started faster:
+Earlier stock-image runs hit runtime restarts because the sandbox was cold-starting a heavy repo and test stack inside a smaller memory limit. The stable stock comparison only became reliable after increasing sandbox memory to `6 GiB`.
 
-- pinned repo checkout already present
-- `node_modules` already present
-- transpiled output already present
-- Electron artifacts already present
-- native packages already present
-- headless test support via `xvfb` already present
+That is part of the value story:
 
-Stock benchmark helper now available:
+- stock image pushed more setup work into the live sandbox
+- custom image removed much of that work up front
+- that reduced both elapsed time and runtime pressure
 
-- the benchmark branch now includes repo-local helpers to reduce agent guesswork on the stock image:
-  - `./scripts/openhands-stock-bootstrap.sh`
-  - `./scripts/openhands-benchmark-status.sh`
-  - `./scripts/openhands-benchmark-verify.sh`
-- those scripts make the stock path more reproducible by emitting phase logs, skipping already-completed bootstrap phases, and wrapping the exact targeted verification command
+## What this repo demonstrates
 
-Important caveat:
+This repo now supports two useful stories.
 
-- the captured stock run was enough to show the setup penalty, but it did not complete end-to-end
-- the custom run completed, but the agent used a pragmatic shortcut by editing the compiled JS under `out/` after confirming the TS-side root cause
-- a stricter future benchmark should add a faster explicit recompilation path so the agent can fix TypeScript source and rerun verification without that detour
-- if you want a fully guided stock baseline, the stock prompt should explicitly permit:
-  - system package installs with `sudo`
-  - `npm install`
-  - `npm run gulp transpile-client-esbuild transpile-extensions`
-  - `npm run electron`
+### 1. Public credibility benchmark
 
-## What is public and safe to share
+The VS Code benchmark demonstrates:
 
-Everything in this demo is synthetic:
+- a real public repo
+- a real contributor-style setup path
+- a real targeted verification command
+- a measurable difference between cold stock bootstrap and prebaked custom setup
 
-- the monorepo
-- the internal docs corpus
-- the benchmark ballast
-- the tests and verification workflow
+Relevant files:
 
-There is no customer or internal production data in this repo.
+- [vscode-benchmark/README.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/vscode-benchmark/README.md)
+- [benchmarks/vscode-benchmark-plan.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/vscode-benchmark-plan.md)
+- [benchmarks/analyze_conversation_export.py](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/analyze_conversation_export.py)
 
-That makes it suitable for:
+### 2. Synthetic enterprise demo
 
-- sharing with customers
-- publishing as a public GitHub repo
-- using as the seed workload for a blank-sandbox `git clone` comparison
+The synthetic fintech demo demonstrates:
 
-## Repo layout
+- prebaked repo contents
+- prebaked docs search
+- prebaked org-style verification tooling
+- large-workspace simulation
 
-- `monorepo/`
-  - the synthetic enterprise workload
-- `Dockerfile`
-  - builds the custom sandbox image on top of `ghcr.io/openhands/agent-server:1.23.0-python`
-- `bin/company-verify`
-  - company verification wrapper
-- `bin/company-doc-search`
-  - `bm25s`-backed doc search wrapper
-- `bin/prepare-fintech-monorepo`
-  - hydrates `/workspace/fintech-monorepo` from the prebaked seed
-- `benchmarks/compare-image-startup.sh`
-  - local benchmark harness
-- `vscode-benchmark/`
-  - VS Code-specific custom image variant and helpers for the public repo benchmark
+That demo is useful for local iteration and for showing how to package your own internal tooling.
 
-## Why the repo is hydrated at runtime
+Relevant files:
 
-OpenHands sandboxes mount a live workspace at runtime, so files baked directly under `/workspace/...` may not be visible when the sandbox starts.
+- [Dockerfile](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/Dockerfile)
+- [README-demo.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/README-demo.md)
 
-To handle that cleanly:
+## Build your own custom image
 
-- the image stores the prebaked seed at `/opt/fintech-monorepo-seed`
-- the helper script `prepare-fintech-monorepo` copies that seed into `/workspace/fintech-monorepo`
-- `company-doc-search` and `company-verify` call that hydration step automatically
+The basic pattern is:
 
-This preserves normal OpenHands behavior while still giving you a realistic prewarmed environment.
+1. Start from the OpenHands agent-server base image.
+2. Keep the normal OpenHands entrypoint intact.
+3. Add your repo, docs, tools, and verification wrappers.
+4. Pre-run the expensive setup you do not want to repeat at task time.
+5. Publish the image to a registry and point Replicated at it.
 
-## Search implementation
+The base image used here is:
 
-Doc search uses [`bm25s`](https://bm25s.github.io/), a lightweight Python BM25 library.
-
-The image and benchmark both build a local lexical index from:
-
-- `docs/**/*.md`
-- `AGENTS.md`
-
-Generated artifacts:
-
-- `tools/doc-search-index/`
-  - saved `bm25s` index
-  - metadata for titles and snippets
-
-The relevant files are:
-
-- `monorepo/tools/build-doc-index.py`
-- `bin/company-doc-search`
-- `monorepo/tools/requirements-doc-search.txt`
-
-## Demo task
-
-Suggested OpenHands prompt:
-
-```text
-In /workspace/fintech-monorepo, update the payments fee calculation so premium customers receive the new discount described in the docs. Use company-doc-search if needed. Before you finish, run company-verify and fix any failures.
+```dockerfile
+FROM ghcr.io/openhands/agent-server:1.23.0-python
 ```
 
-Expected flow:
+Important rule:
 
-- doc search points to the payments pricing docs
-- the current code fails verification because it still uses the stale premium discount
-- after the fix, `company-verify` passes
+- preserve normal OpenHands agent-server behavior
+- extend the image; do not replace the runtime contract with a custom entrypoint
 
-## Verification commands inside the sandbox
+### Example: VS Code benchmark image
 
-Hydrate the workspace explicitly if you want:
+Build and push an amd64 image:
 
 ```bash
-prepare-fintech-monorepo
+docker buildx build \
+  --platform linux/amd64 \
+  -f vscode-benchmark/Dockerfile \
+  -t ghcr.io/<owner>/openhands-custom-image:vscode-benchmark \
+  --push \
+  .
 ```
 
-Search docs:
+That image prebakes:
 
-```bash
-company-doc-search "premium discount payments"
-```
+- pinned repo checkout
+- `node_modules`
+- transpiled output
+- Electron artifacts
+- native packages such as `xvfb`, `libkrb5-dev`, `pkg-config`, `libx11-dev`, and `libxkbfile-dev`
+- repo-local verification wrappers
 
-Run the verification suite:
+### Example: synthetic enterprise image
 
-```bash
-company-verify
-```
-
-Show the repo contents:
-
-```bash
-fd . /workspace/fintech-monorepo
-```
-
-## Local build instructions
-
-Build a local image:
-
-```bash
-docker build -t openhands-custom-image:latest /Users/rajiv.shah/Code/install_replicate/openhands-custom-image
-```
-
-Build with a specific size profile:
-
-```bash
-docker build \
-  --build-arg DEMO_PROFILE=medium \
-  -t openhands-custom-image:medium \
-  /Users/rajiv.shah/Code/install_replicate/openhands-custom-image
-```
-
-Open a shell in the image:
-
-```bash
-docker run --rm -it --entrypoint bash openhands-custom-image:latest
-```
-
-## Publish instructions for Replicated
-
-Example amd64 build for AWS-hosted OpenHands:
+Build the synthetic demo image:
 
 ```bash
 docker buildx build \
   --platform linux/amd64 \
   --build-arg DEMO_PROFILE=heavy \
-  -t ghcr.io/<owner>/openhands-custom-image:<tag> \
+  -t ghcr.io/<owner>/openhands-custom-image:enterprise-demo \
   --push \
-  /Users/rajiv.shah/Code/install_replicate/openhands-custom-image
+  .
 ```
 
-Then configure Replicated with:
+## Configure Replicated
 
-- `Sandbox Image Repository`: `ghcr.io/<owner>/openhands-custom-image`
-- `Sandbox Image Tag`: `<tag>`
-- `Registry Server`: only if needed
-- `Registry Username`: only if needed
-- `Registry Password or Credentials`: only if needed
+In the Replicated installer, set:
 
-## Local smoke check
+- `Use a Custom Sandbox Image`: on
+- `Sandbox Image Repository`: your image repository
+- `Sandbox Image Tag`: your tag
+- `Registry Server`: if required
+- `Registry Username`: if required
+- `Registry Password or Credentials`: if required
 
-The local harness is optional.
+This feature is specifically for the sandbox / agent-server image, not every OpenHands service image.
 
-It is useful for quickly validating that:
+## Reproduce the published VS Code benchmark
 
-- workspace hydration works
-- doc search works
-- verification works
-- the custom image is meaningfully faster on the synthetic demo
+### Stock image run
 
-It is not the main customer-facing proof point. The stronger benchmark is the public-repo VS Code comparison later in this README.
-
-Run the local harness if you want a fast sanity check while developing the image:
-
-```bash
-/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/compare-image-startup.sh \
-  ghcr.io/<owner>/openhands-custom-image:<tag>
-```
-
-What it measures:
-
-- `standard readiness`
-  - time to prepare a blank sandbox until repo contents, dependencies, and searchable docs are usable
-- `custom readiness`
-  - time to hydrate the prebaked workspace and use the existing doc search
-- `standard first test signal`
-  - time until the blank sandbox can produce the first failing test signal
-- `custom first test signal`
-  - time until the prewarmed image can produce that same failing signal
-
-Example local result from the updated hydration model on the `light` profile:
-
-- `standard readiness`: `4.702s`
-- `custom readiness`: `0.504s`
-- `standard first test signal`: `4.166s`
-- `custom first test signal`: `0.824s`
-- `readiness speedup`: `9.33x`
-- `feedback speedup`: `5.06x`
-
-These are laptop-friendly validation numbers, not the primary enterprise benchmark.
-
-## Public repo benchmark
-
-For a real public-repo credibility benchmark, use the VS Code plan in:
-
-- `benchmarks/vscode-benchmark-plan.md`
-- `vscode-benchmark/README.md`
-
-That benchmark is designed to show the value of a prewarmed sandbox on a large public repo with real setup and real test infrastructure, rather than just synthetic ballast.
-
-Benchmark artifacts used for the published results above:
-
-- custom-image export:
-  - `conversation_cc6728d1578d429fa1cd78dc7015b8a5`
-- stock-image export:
-  - `conversation_42eb101dba684742871cfc19849a75fb`
-- custom image tag:
-  - `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
-
-## Replicated A/B test protocol
-
-To compare the stock sandbox image against the custom sandbox image in a live Replicated install:
-
-1. Run a `baseline` conversation with the custom image feature turned off.
-2. Run a `custom-image` conversation with the custom image feature turned on.
-3. Export both conversations from OpenHands.
-4. Analyze both exports with the included script.
-
-Suggested baseline prompt:
+Use the stock sandbox image and this prompt:
 
 ```text
-Clone https://github.com/rajshah4/openhands-custom-image into /workspace/project/openhands-custom-image. Work in the monorepo/ directory as your repo root. Update the payments fee calculation so premium customers receive the new discount described in the docs. Before you finish, run the repo verification flow and fix any failures.
+Clone https://github.com/rajshah4/vscode-benchmark-repo.git into /workspace/project/vscode-benchmark, checkout branch openhands-benchmark-01, and work there.
+
+Do not guess at bootstrap steps. Run the repo-local bootstrap helper first:
+
+./scripts/openhands-stock-bootstrap.sh
+
+If progress is unclear or something seems stuck, check:
+
+./scripts/openhands-benchmark-status.sh
+
+After bootstrap finishes, run:
+
+./scripts/openhands-benchmark-verify.sh
+
+Then fix the bug in:
+src/vs/platform/configuration/common/configurationModels.ts
+
+Rerun ./scripts/openhands-benchmark-verify.sh until it passes.
+
+Before you finish, summarize:
+- what bootstrap/setup work was required before the first useful test output
+- what code change fixed the bug
+- what setup steps were most expensive or fragile
 ```
 
-Suggested custom-image prompt:
+### Custom image run
+
+Use the custom sandbox image and this prompt:
 
 ```text
-In /workspace/fintech-monorepo, update the payments fee calculation so premium customers receive the new discount described in the docs. Use company-doc-search if needed. Before you finish, run company-verify and fix any failures.
+Start by running prepare-vscode-benchmark. Then work in /workspace/vscode-benchmark.
+
+Run the verification command first:
+
+vscode-benchmark-verify
+
+Then fix the bug in:
+src/vs/platform/configuration/common/configurationModels.ts
+
+Rerun vscode-benchmark-verify until it passes.
+
+Before you finish, summarize which setup steps were already handled by the custom image.
 ```
 
-Useful milestone patterns for the export analyzer:
-
-```bash
-python3 benchmarks/analyze_conversation_export.py /path/to/conversation_export \
-  --pattern 'first_failure::FAIL|AssertionError|doc index not found' \
-  --pattern 'verification_passed::company-verify passed|Tests .* passed'
-```
-
-You can also dump the full timeline:
+### Analyze conversation exports
 
 ```bash
 python3 benchmarks/analyze_conversation_export.py /path/to/conversation_export --show-events
 ```
 
-Primary metrics to compare:
+That lets you compare:
 
-- time to first meaningful verification failure
+- time to repo-ready state
+- time to first useful test
 - time to passing verification
 - total conversation span
 
-## Size profiles
+## Additional docs
 
-The demo supports scalable ballast profiles:
+- [vscode-benchmark/README.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/vscode-benchmark/README.md)
+  VS Code-specific image build and reproduction details.
+- [benchmarks/vscode-benchmark-plan.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/benchmarks/vscode-benchmark-plan.md)
+  Benchmark design notes and task choices.
+- [README-demo.md](/Users/rajiv.shah/Code/install_replicate/openhands-custom-image/README-demo.md)
+  Synthetic enterprise demo details.
 
-- `light`
-  - quick local validation
-- `medium`
-  - laptop-friendly demo default
-- `heavy`
-  - stronger enterprise demo
-- `xlarge`
-  - only for bigger builders and longer pushes
+## Safe to share
 
-You can also override ballast size directly:
+Everything in this repo is synthetic or public-benchmark-oriented:
 
-```bash
-docker build \
-  --build-arg DEMO_PROFILE=medium \
-  --build-arg ENTERPRISE_BALLAST_MB=10240 \
-  -t openhands-custom-image:10gb \
-  /Users/rajiv.shah/Code/install_replicate/openhands-custom-image
-```
+- synthetic docs and workload for the fintech demo
+- public pinned benchmark fork for the VS Code comparison
+- no customer or production data
 
-## Recommended customer-facing setup
+That makes the repo suitable for:
 
-For a clean customer comparison:
-
-1. Publish this repo publicly.
-2. Use the same repo as the canonical benchmark workload.
-3. For the blank-sandbox path, clone or download the repo into the workspace and prepare the `monorepo/` seed.
-4. For the custom-sandbox path, use the published image built from this repo.
-5. Run the same prompt in both environments and compare:
-   - time to usable workspace
-   - time to first failing verification signal
-   - time to green after the fix
-
-If you want a stronger enterprise narrative, build a heavier image profile on a more powerful builder and rerun the same benchmark flow.
+- sharing with customers
+- using as a benchmark reference
+- adapting into your own custom sandbox image workflow

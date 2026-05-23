@@ -5,6 +5,6 @@ prepare-vscode-benchmark
 cd "${VSCODE_BENCHMARK_WORKSPACE_ROOT:-/workspace/vscode-benchmark}"
 
 xvfb-run -a -s "-screen 0 1280x1024x24" \
-  ./scripts/test.sh \
+  env VSCODE_SKIP_PRELAUNCH=1 ./scripts/test.sh \
     --run src/vs/platform/configuration/test/common/configurationModels.test.ts \
     --grep "excluded restricted properties"

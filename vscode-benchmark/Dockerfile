@@ -2,7 +2,7 @@ FROM ghcr.io/openhands/agent-server:1.23.0-python
 
 ARG VSCODE_BENCHMARK_REPO=https://github.com/rajshah4/vscode-benchmark-repo.git
 ARG VSCODE_BENCHMARK_REF=openhands-benchmark-01
-ARG VSCODE_BENCHMARK_COMMIT=d2164c509e77cfc67fe51ced55e16af95e2d416b
+ARG VSCODE_BENCHMARK_COMMIT=9d16a199035b6640b955a21f1dddd1604ab3fe29
 
 ENV VSCODE_BENCHMARK_SEED_ROOT=/opt/vscode-benchmark-repo
 ENV VSCODE_BENCHMARK_WORKSPACE_ROOT=/workspace/vscode-benchmark
@@ -60,7 +60,7 @@ RUN chmod +x \
     && cd "$VSCODE_BENCHMARK_SEED_ROOT" \
     && test "$(git rev-parse HEAD)" = "$VSCODE_BENCHMARK_COMMIT" \
     && npm install \
-    && ./node_modules/.bin/gulp transpile-client-esbuild transpile-extensions \
+    && node --experimental-strip-types --max-old-space-size=4096 ./node_modules/gulp/bin/gulp.js transpile-client-esbuild transpile-extensions \
     && npm run electron \
     && chown -R openhands:openhands "$VSCODE_BENCHMARK_SEED_ROOT" /opt/vscode-benchmark-image
 
