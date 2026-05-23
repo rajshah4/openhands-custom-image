@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import bm25s
+
+
+def row_values(values):
+    if hasattr(values, "ndim") and values.ndim > 1:
+        values = values[0]
+    if hasattr(values, "tolist"):
+        values = values.tolist()
+    return values
+
+
+def normalize_doc_path(doc_value):
+    if isinstance(doc_value, dict):
+        return doc_value.get("text")
+    return doc_value
+
+
+def main() -> int:
+    repo_root = Path(os.environ.get("FINTECH_MONOREPO_ROOT", "/workspace/fintech-monorepo"))
+    subprocess.run(["prepare-fintech-monorepo"], check=True, stdout=subprocess.DEVNULL)
+
+    index_dir = repo_root / "tools" / "doc-search-index"
+    metadata_path = index_dir / "metadata.json"
+    if not index_dir.exists():
+        print(f"doc index not found at {index_dir}", file=sys.stderr)
+        return 1
+    if not metadata_path.exists():
+        print(f"doc metadata not found at {metadata_path}", file=sys.stderr)
+        return 1
+
+    if len(sys.argv) < 2:
+        print('usage: company-doc-search "query"', file=sys.stderr)
+        return 1
+
+    query = " ".join(sys.argv[1:]).strip()
+    if not query:
+        print("query must not be empty", file=sys.stderr)
+        return 1
+
+    retriever = bm25s.BM25.load(str(index_dir), load_corpus=True)
+    metadata = {
+        item["path"]: item
+        for item in json.loads(metadata_path.read_text()).get("documents", [])
+    }
+
+    query_tokens = bm25s.tokenize(query)
+    docs, scores = retriever.retrieve(query_tokens, k=5)
+    docs = row_values(docs)
+    scores = row_values(scores)
+
+    matches = []
+    for doc_path, score in zip(docs, scores):
+        doc_path = normalize_doc_path(doc_path)
+        meta = metadata.get(doc_path)
+        if meta is None:
+            continue
+        matches.append((score, meta))
+
+    if not matches:
+        print("No documentation matches found.")
+        return 0
+
+    for rank, (score, doc) in enumerate(matches, start=1):
+        print(f"{rank}. {doc['path']}  score={score:.3f}")
+        print(f"   title: {doc['title']}")
+        print(f"   snippet: {doc['snippet']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

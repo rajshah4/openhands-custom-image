@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="${FINTECH_MONOREPO_ROOT:-/workspace/fintech-monorepo}"
+
+prepare-fintech-monorepo >/dev/null
+
+if [[ ! -d "$repo_root" ]]; then
+  echo "fintech monorepo not found at $repo_root" >&2
+  exit 1
+fi
+
+cd "$repo_root"
+
+echo "==> typecheck"
+npm run typecheck
+
+echo "==> unit tests"
+npm run test
+
+echo "==> contract tests"
+npm run contract:test
+
+echo "==> policy checks"
+npm run policy:check
+
+echo "company-verify passed"

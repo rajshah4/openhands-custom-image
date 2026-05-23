@@ -1,0 +1,20 @@
+{
+  "name": "fintech-monorepo",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --reporter=dot",
+    "contract:test": "node tools/contract-check.mjs",
+    "policy:check": "node tools/policy-check.mjs",
+    "verify": "npm run typecheck && npm run test && npm run contract:test && npm run policy:check"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
