@@ -1,0 +1,13 @@
+FROM ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v1
+
+USER root
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY bin/vscode-benchmark-verify /usr/local/bin/vscode-benchmark-verify
+
+RUN chmod +x /usr/local/bin/vscode-benchmark-verify
+
+USER openhands

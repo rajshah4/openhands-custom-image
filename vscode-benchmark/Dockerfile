@@ -45,6 +45,7 @@ RUN apt-get update \
         npm \
         pkg-config \
         ripgrep \
+        xvfb \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd
 
