@@ -15,6 +15,84 @@ It gives you two comparison modes:
   - hydrate the live OpenHands workspace from the prebaked seed
   - get to the first useful failure much faster
 
+## Results at a glance
+
+The strongest benchmark in this repo is the public-repo VS Code comparison.
+
+We ran the same bug-fix task in two environments:
+
+- `stock sandbox image`
+  - clone the benchmark repo
+  - bootstrap the repo
+  - reach the requested test command the hard way
+- `custom sandbox image`
+  - start with the pinned repo, dependencies, transpiled output, Electron artifacts, and native test dependencies already baked in
+
+The benchmark task was:
+
+- repo:
+  - pinned VS Code benchmark fork
+- bug location:
+  - `src/vs/platform/configuration/common/configurationModels.ts`
+- requested verification command:
+  - `./scripts/test.sh --run src/vs/platform/configuration/test/common/configurationModels.test.ts --grep "excluded restricted properties"`
+
+Benchmark repo shape for context:
+
+- checked-out working tree: about `408 MB`
+- files in the shallow benchmark checkout: about `14.8k`
+- directories in the shallow benchmark checkout: about `4.3k`
+
+These numbers are for the pinned benchmark repo before stock-image dependency installation, transpilation, or extra test artifacts.
+
+Observed timings:
+
+| Metric | Stock image | Custom image | Savings |
+| --- | ---: | ---: | ---: |
+| Repo available in workspace | `100.8s` | `13.1s` | `87.7s` |
+| First targeted test execution | `279.4s` | `26.5s` | `252.9s` |
+| Setup after repo-ready before first targeted test | `178.6s` | `13.5s` | `165.1s` |
+| Completed task span | incomplete in captured run | `238.9s` | n/a |
+
+What `First targeted test execution` means:
+
+- this is the first point where the agent actually reached the specific benchmark test command above and got useful output from it
+- it is the clearest “time to real work” metric in this README
+- it is not just “the repo exists”
+- it is not just “the agent started thinking”
+
+What the numbers show:
+
+- the savings are not mainly about `git clone`
+- the bigger win is avoiding the environment/bootstrap work between “repo exists” and “the agent can run the requested test”
+- in this benchmark, the custom image saved about `4m 13s` to the first targeted test execution
+- it also saved about `2m 45s` of post-clone test-readiness work
+
+Why the stock run slowed down:
+
+- clone and branch checkout
+- repo inspection and test-runner discovery
+- dependency/test bootstrap from `scripts/test.sh`
+- then a missing native dependency:
+  - `gssapi/gssapi.h`
+  - attempted package install:
+    - `apt-get install -y libkrb5-dev`
+
+Why the custom run started faster:
+
+- pinned repo checkout already present
+- `node_modules` already present
+- transpiled output already present
+- Electron artifacts already present
+- native packages already present
+- headless test support via `xvfb` already present
+
+Important caveat:
+
+- the captured stock run was enough to show the setup penalty, but it did not complete end-to-end
+- the custom run completed, but the agent used a pragmatic shortcut by editing the compiled JS under `out/` after confirming the TS-side root cause
+- a stricter future benchmark should add a faster explicit recompilation path so the agent can fix TypeScript source and rerun verification without that detour
+
 ## What is public and safe to share
 
 Everything in this demo is synthetic:
@@ -217,86 +295,14 @@ For a real public-repo credibility benchmark, use the VS Code plan in:
 
 That benchmark is designed to show the value of a prewarmed sandbox on a large public repo with real setup and real test infrastructure, rather than just synthetic ballast.
 
-Benchmark repo shape for context:
+Benchmark artifacts used for the published results above:
 
-- checked-out working tree: about `408 MB`
-- files in the shallow benchmark checkout: about `14.8k`
-- directories in the shallow benchmark checkout: about `4.3k`
-
-These numbers are for the pinned benchmark repo before stock-image dependency installation, transpilation, or extra test artifacts. The custom image also prebakes `node_modules`, transpiled output, Electron artifacts, and native packages needed for the test flow.
-
-### VS Code benchmark results
-
-We validated the public-repo benchmark against a pinned VS Code fork and a small intentional regression in:
-
-- `src/vs/platform/configuration/common/configurationModels.ts`
-- verification command:
-  - `./scripts/test.sh --run src/vs/platform/configuration/test/common/configurationModels.test.ts --grep "excluded restricted properties"`
-
-Custom-image run used:
-
-- image: `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
-- export:
+- custom-image export:
   - `conversation_cc6728d1578d429fa1cd78dc7015b8a5`
-
-Baseline run used:
-
-- stock sandbox image
-- export:
+- stock-image export:
   - `conversation_42eb101dba684742871cfc19849a75fb`
-
-Observed timings:
-
-| Metric | Stock image | Custom image | Savings |
-| --- | ---: | ---: | ---: |
-| Repo available in workspace | `100.8s` | `13.1s` | `87.7s` |
-| First meaningful verification attempt | `279.4s` | `26.5s` | `252.9s` |
-| Setup between repo-ready and first test | `178.6s` | `13.5s` | `165.1s` |
-| Completed task span | incomplete in captured run | `238.9s` | n/a |
-
-How to interpret these numbers:
-
-- `Repo available in workspace`
-  - stock image had to clone the benchmark repo and check out the benchmark branch
-  - custom image only had to run `prepare-vscode-benchmark`, which links the prebaked repo into the workspace
-- `First meaningful verification attempt`
-  - this is the first point where the agent actually reached the targeted failing test path
-  - this is the strongest headline metric for the benchmark
-- `Setup between repo-ready and first test`
-  - this isolates the “environment bootstrap” tax after the repo is present
-  - it includes dependency discovery, test-runner preparation, and other test readiness work
-
-What the stock run spent time on:
-
-- cloning the repo
-- checking out the benchmark branch
-- inspecting the repo and test scripts
-- letting `scripts/test.sh` bootstrap dependencies and test prerequisites
-- then failing on a missing native dependency:
-  - `gssapi/gssapi.h`
-  - attempted package install:
-    - `apt-get install -y libkrb5-dev`
-
-What the custom image already had baked in:
-
-- pinned repo checkout
-- `node_modules`
-- transpiled output
-- Electron artifacts
-- native packages needed for the benchmark
-- headless test support via `xvfb`
-
-Practical conclusion:
-
-- the validated savings are not “git clone is slow”
-- the real win is avoiding the setup tax between “repo exists” and “agent can run the real verification command”
-- in this benchmark, the custom image saved about `4m 13s` to first meaningful verification and about `2m 45s` of post-clone test-readiness work
-
-Important caveat:
-
-- the captured stock run was already enough to show the setup penalty, but it did not complete end-to-end
-- the custom run completed, but the agent chose a pragmatic shortcut by editing the compiled JS under `out/` after confirming the TS-side root cause
-- for a stricter benchmark, we should add a faster explicit recompilation path so the agent can fix the TypeScript source and rerun verification without that detour
+- custom image tag:
+  - `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
 
 ## Replicated A/B test protocol
 
