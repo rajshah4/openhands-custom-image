@@ -1,65 +1,36 @@
 # OpenHands Custom Sandbox Images
 
-Custom sandbox images let you preload the repo, dependencies, docs, and test harness your agent needs, so it starts near the engineering task instead of spending minutes provisioning a workspace.
+Custom sandbox images let you preload the repo, dependencies, docs, and test harness your agent needs, so your agent starts the task instead of spending minutes provisioning a workspace.
+
+![VS Code benchmark results](assets/vscode-benchmark-results.svg)
 
 ## Why use a custom image
 
 - `Faster path to useful work`
   The agent can reach the real task quickly instead of burning time on clone, install, transpile, and bootstrap steps.
-
 - `Easier monorepo workflows`
   Repo checkout, dependencies, transpiled output, and helper tooling can already be present.
-
 - `Easier complex test harness workflows`
   Native packages, headless browser support, Electron artifacts, and org-specific wrappers can be prebaked.
-
 - `Lower setup variance and better reliability`
   Each run does not need to rediscover the same bootstrap steps, which reduces stalls, OOMs, and half-finished setup.
 
-- `Better token efficiency`
-  Fewer tokens are spent on provisioning work, so more of the context budget goes to the actual task.
-
 ## Published benchmark
 
-The main benchmark in this repo uses a pinned public VS Code fork with a real test harness:
-
-- repo: `https://github.com/rajshah4/vscode-benchmark-repo`
-- branch: `openhands-benchmark-01`
-- checked-out working tree: about `408 MB`
-- files: about `14.8k`
-- directories: about `4.3k`
-- bug location:
-  - `src/vs/platform/configuration/common/configurationModels.ts`
-- targeted verification:
-  - `./scripts/test.sh --run src/vs/platform/configuration/test/common/configurationModels.test.ts --grep "excluded restricted properties"`
-
-Important context:
-
-- the stock sandbox needed `6 GiB` of runtime memory to complete cold bootstrap reliably
-- the custom-image run completed with a `2 GiB` sandbox because the repo and harness were already prebaked
-
-Historical custom image used in the benchmark run:
-
-- `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
-
-Latest rebuilt benchmark image with the current helper scripts:
-
-- `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v3`
-
-![VS Code benchmark results](assets/vscode-benchmark-results.svg)
+This repo includes a public VS Code benchmark where the agent fixes a bug and validates it with a real test suite.
 
 Biggest results:
 
-- `11m 10s` faster to first useful test output
-- `10m 10s` faster end to end
-- `9m 28s` less harness bootstrap after repo access
+- `26.3x` faster to first useful test output
+- `43.1x` faster harness bootstrap after repo access
+- `3.6x` faster end to end
 
-| Metric | Stock image | Custom image | Savings |
+| Metric | Stock image | Custom image | Speedup |
 | --- | ---: | ---: | ---: |
-| Repo available in workspace | `115.2s` | `13.1s` | `102.1s` |
-| First targeted test output | `696.5s` | `26.5s` | `670.0s` |
-| Bootstrap after repo access, before first useful test | `581.4s` | `13.5s` | `567.9s` |
-| End-to-end task completion | `848.7s` | `238.9s` | `609.8s` |
+| Repo available in workspace | `115.2s` | `13.1s` | `8.8x` |
+| First targeted test output | `696.5s` | `26.5s` | `26.3x` |
+| Bootstrap after repo access, before first useful test | `581.4s` | `13.5s` | `43.1x` |
+| End-to-end task completion | `848.7s` | `238.9s` | `3.6x` |
 
 What these metrics mean:
 
