@@ -51,7 +51,7 @@ Observed timings:
 | --- | ---: | ---: | ---: |
 | Repo available in workspace | `100.8s` | `13.1s` | `87.7s` |
 | First targeted test execution | `279.4s` | `26.5s` | `252.9s` |
-| Setup after repo-ready before first targeted test | `178.6s` | `13.5s` | `165.1s` |
+| Test bootstrap after repo access | `178.6s` | `13.5s` | `165.1s` |
 | Time from first targeted test execution to task completion | incomplete in captured run | `212.4s` | n/a |
 | Completed task span | incomplete in captured run | `238.9s` | n/a |
 
@@ -74,7 +74,7 @@ What the numbers show:
 - the savings are not mainly about `git clone`
 - the bigger win is avoiding the environment/bootstrap work between “repo exists” and “the agent can run the requested test”
 - in this benchmark, the custom image saved about `4m 13s` to the first targeted test execution
-- it also saved about `2m 45s` of post-clone test-readiness work
+- it also saved about `2m 45s` of test bootstrap work after the repo was already available
 - the custom run still spent about `3m 32s` after the first test on the actual engineering loop: diagnosis, edits, and reruns
 
 Why the stock run slowed down:
