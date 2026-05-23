@@ -57,6 +57,10 @@ Published custom image tag used for the custom run:
 
 - `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
 
+Latest rebuilt benchmark image with the current helper scripts:
+
+- `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v3`
+
 ### Results
 
 The completed stock run and successful custom run produced these timings:

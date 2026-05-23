@@ -21,6 +21,10 @@ Published benchmark image tag used in the custom run:
 
 - `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v2`
 
+Latest rebuilt benchmark image with the current helper scripts:
+
+- `ghcr.io/rajshah4/openhands-custom-image:vscode-benchmark-2026-05-23-v3`
+
 ## Prebaked contents
 
 - VS Code benchmark repo:
