@@ -2,7 +2,7 @@
 
 Custom sandbox images let you preload the repo, dependencies, docs, and test harness your agent needs, so your agent starts the task instead of spending minutes provisioning a workspace.
 
-![VS Code benchmark results](assets/vscode-benchmark-results.svg)
+![VS Code benchmark results](assets/vscode-benchmark-results-v2.svg)
 
 ## Why use a custom image
 
