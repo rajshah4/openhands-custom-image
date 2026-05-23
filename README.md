@@ -195,6 +195,47 @@ Validated local result from the updated hydration model on the `light` profile:
 
 These are laptop-friendly validation numbers, not the final enterprise story.
 
+## Replicated A/B test protocol
+
+To compare the stock sandbox image against the custom sandbox image in a live Replicated install:
+
+1. Run a `baseline` conversation with the custom image feature turned off.
+2. Run a `custom-image` conversation with the custom image feature turned on.
+3. Export both conversations from OpenHands.
+4. Analyze both exports with the included script.
+
+Suggested baseline prompt:
+
+```text
+Clone https://github.com/rajshah4/openhands-custom-image into /workspace/project/openhands-custom-image. Work in the monorepo/ directory as your repo root. Update the payments fee calculation so premium customers receive the new discount described in the docs. Before you finish, run the repo verification flow and fix any failures.
+```
+
+Suggested custom-image prompt:
+
+```text
+In /workspace/fintech-monorepo, update the payments fee calculation so premium customers receive the new discount described in the docs. Use company-doc-search if needed. Before you finish, run company-verify and fix any failures.
+```
+
+Useful milestone patterns for the export analyzer:
+
+```bash
+python3 benchmarks/analyze_conversation_export.py /path/to/conversation_export \
+  --pattern 'first_failure::FAIL|AssertionError|doc index not found' \
+  --pattern 'verification_passed::company-verify passed|Tests .* passed'
+```
+
+You can also dump the full timeline:
+
+```bash
+python3 benchmarks/analyze_conversation_export.py /path/to/conversation_export --show-events
+```
+
+Primary metrics to compare:
+
+- time to first meaningful verification failure
+- time to passing verification
+- total conversation span
+
 ## Size profiles
 
 The demo supports scalable ballast profiles:
