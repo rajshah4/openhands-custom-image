@@ -51,6 +51,8 @@ In the completed stock run, the expensive setup looked roughly like this:
 
 Once both environments were ready, the actual bug-fix loop was much smaller than the cold-start setup tax. That is the real value of a custom sandbox image: less environment assembly, faster verification, and more reliable agent runs.
 
+In this benchmark, the stock image required a 6 GB sandbox to complete the install/test flow, while the custom image worked at 2 GB.
+
 ## Local agent-server benchmark
 
 The same optimization also helps local OpenHands users who run an agent-server sandbox on their own machine. A local run is faster overall because Docker Desktop on a MacBook has more memory, local image layers, and a fast SSD compared with the Replicated VM benchmark environment, but the shape of the win is the same: the custom image avoids repeated repo and harness bootstrap work.
