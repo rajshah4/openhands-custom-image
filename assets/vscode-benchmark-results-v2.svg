@@ -1,19 +1,19 @@
 <svg width="1200" height="860" viewBox="0 0 1200 860" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">VS Code custom sandbox benchmark results</title>
-  <desc id="desc">Comparison of stock and custom sandbox benchmark timings showing large savings to first useful test and end to end completion.</desc>
+  <desc id="desc">Comparison of stock and custom sandbox benchmark elapsed intervals showing large setup savings and faster end to end completion.</desc>
   <rect width="1200" height="860" rx="28" fill="#F8F7F2"/>
   <rect x="40" y="40" width="1120" height="780" rx="24" fill="#FFFDF8" stroke="#E7E0CF"/>
 
   <text x="72" y="104" fill="#1F2937" font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="700">VS Code Benchmark: stock sandbox vs custom sandbox image</text>
-  <text x="72" y="140" fill="#4B5563" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20">The real gain was avoiding repo and test-harness bootstrap, not just cloning faster.</text>
+  <text x="72" y="140" fill="#4B5563" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20">Elapsed intervals show the real gain: avoiding repo and test-harness bootstrap.</text>
 
   <rect x="72" y="172" width="322" height="94" rx="18" fill="#E7F7EE"/>
-  <text x="96" y="210" fill="#166534" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">First useful test</text>
-  <text x="96" y="248" fill="#14532D" font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="800">26.3x faster</text>
+  <text x="96" y="210" fill="#166534" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">Harness bootstrap</text>
+  <text x="96" y="248" fill="#14532D" font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="800">43.1x faster</text>
 
   <rect x="414" y="172" width="322" height="94" rx="18" fill="#FFF4D6"/>
-  <text x="438" y="210" fill="#92400E" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">Harness bootstrap</text>
-  <text x="438" y="248" fill="#78350F" font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="800">43.1x faster</text>
+  <text x="438" y="210" fill="#92400E" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">Repo setup</text>
+  <text x="438" y="248" fill="#78350F" font-family="ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="800">8.8x faster</text>
 
   <rect x="756" y="172" width="322" height="94" rx="18" fill="#E8F0FE"/>
   <text x="780" y="210" fill="#1D4ED8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">End-to-end</text>
@@ -36,28 +36,28 @@
   <rect x="210" y="348" width="14" height="14" rx="7" fill="#16A34A"/>
   <text x="234" y="360" fill="#374151" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">Custom image</text>
 
-  <text x="72" y="414" fill="#111827" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Repo available in workspace</text>
+  <text x="72" y="414" fill="#111827" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Repo setup until available in workspace</text>
   <rect x="140" y="430" width="132" height="22" rx="11" fill="#6B7280"/>
   <rect x="140" y="460" width="15" height="22" rx="11" fill="#16A34A"/>
   <text x="286" y="446" fill="#374151" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">115.2s</text>
   <text x="170" y="476" fill="#166534" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">13.1s</text>
   <text x="980" y="448" fill="#92400E" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">8.8x faster</text>
 
-  <text x="72" y="534" fill="#111827" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">First targeted test output</text>
-  <rect x="140" y="550" width="799" height="22" rx="11" fill="#6B7280"/>
-  <rect x="140" y="580" width="31" height="22" rx="11" fill="#16A34A"/>
-  <text x="953" y="566" fill="#374151" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">696.5s</text>
-  <text x="186" y="596" fill="#166534" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">26.5s</text>
-  <text x="980" y="568" fill="#92400E" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">26.3x faster</text>
+  <text x="72" y="534" fill="#111827" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Bootstrap from repo-ready to first useful test</text>
+  <rect x="140" y="550" width="666" height="22" rx="11" fill="#6B7280"/>
+  <rect x="140" y="580" width="16" height="22" rx="11" fill="#16A34A"/>
+  <text x="820" y="566" fill="#374151" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">581.4s</text>
+  <text x="171" y="596" fill="#166534" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">13.5s</text>
+  <text x="980" y="568" fill="#92400E" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">43.1x faster</text>
 
-  <text x="72" y="654" fill="#111827" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Bootstrap after repo access</text>
-  <rect x="140" y="670" width="666" height="22" rx="11" fill="#6B7280"/>
-  <rect x="140" y="700" width="16" height="22" rx="11" fill="#16A34A"/>
-  <text x="820" y="686" fill="#374151" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">581.4s</text>
-  <text x="171" y="716" fill="#166534" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">13.5s</text>
-  <text x="980" y="688" fill="#92400E" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">43.1x faster</text>
+  <text x="72" y="654" fill="#111827" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Fix, rerun, and final response</text>
+  <rect x="140" y="670" width="174" height="22" rx="11" fill="#6B7280"/>
+  <rect x="140" y="700" width="244" height="22" rx="11" fill="#16A34A"/>
+  <text x="328" y="686" fill="#374151" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">152.2s</text>
+  <text x="398" y="716" fill="#166534" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">212.4s</text>
+  <text x="980" y="688" fill="#92400E" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">conversation variance</text>
 
-  <text x="72" y="774" fill="#111827" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">End-to-end task completion</text>
+  <text x="72" y="774" fill="#111827" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Full end-to-end task</text>
   <rect x="140" y="790" width="973" height="22" rx="11" fill="#6B7280"/>
   <rect x="140" y="790" width="274" height="22" rx="11" fill="#16A34A"/>
   <text x="1010" y="806" fill="#374151" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">848.7s</text>

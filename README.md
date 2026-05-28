@@ -17,34 +17,26 @@ Custom sandbox images let you preload the repo, dependencies, docs, and test har
 
 ## Published benchmark
 
-This repo includes a public VS Code benchmark where the agent fixes a bug and validates it with a real test suite.
+This repo includes a public VS Code benchmark where the agent fixes a bug and validates it with a real test suite. These results used the sandbox inside the [Enterprise OpenHands](https://docs.openhands.dev/enterprise) Replicated VM setup.
 
 Biggest results:
 
-- `26.3x` faster to first useful test output
 - `43.1x` faster harness bootstrap after repo access
+- `8.8x` faster repo availability
 - `3.6x` faster end to end
 
-| Metric | Stock image | Custom image | Speedup |
+| Elapsed work | Stock image | Custom image | Speedup |
 | --- | ---: | ---: | ---: |
-| Repo available in workspace | `115.2s` | `13.1s` | `8.8x` |
-| First targeted test output | `696.5s` | `26.5s` | `26.3x` |
-| Bootstrap after repo access, before first useful test | `581.4s` | `13.5s` | `43.1x` |
-| End-to-end task completion | `848.7s` | `238.9s` | `3.6x` |
+| Repo setup until available in workspace | `115.2s` | `13.1s` | `8.8x` |
+| Bootstrap from repo-ready to first useful test | `581.4s` | `13.5s` | `43.1x` |
+| Fix, rerun, and final response after first useful test | `152.2s` | `212.4s` | `0.7x` |
+| Full end-to-end task | `848.7s` | `238.9s` | `3.6x` |
 
 What these metrics mean:
 
-- `Repo available in workspace`
-  The repo exists and is accessible where the agent expects to work.
+Each row is an elapsed interval. The first three rows add up to the full task duration, modulo rounding. The custom image made the first useful test output appear much sooner because repo setup plus bootstrap dropped from about `696.5s` to `26.5s`.
 
-- `First targeted test output`
-  The agent has reached the exact requested verification command and received useful output from it.
-
-- `Bootstrap after repo access`
-  The setup gap between "repo exists" and "the real test is running."
-
-- `End-to-end task completion`
-  Full task span, including setup, diagnosis, edits, reruns, and final summary.
+The `Fix, rerun, and final response` row is conversation-dependent rather than image-dependent. At that point both environments can run the test, so the remaining time mostly reflects agent reasoning, file inspection, edit strategy, retries, and final-response latency. In this run the custom conversation spent longer after the first useful test, but the custom image still won end to end because it removed most of the cold setup work.
 
 ### What the results mean
 
@@ -58,6 +50,39 @@ In the completed stock run, the expensive setup looked roughly like this:
 - Electron prep: about `5s`
 
 Once both environments were ready, the actual bug-fix loop was much smaller than the cold-start setup tax. That is the real value of a custom sandbox image: less environment assembly, faster verification, and more reliable agent runs.
+
+## Local agent-server benchmark
+
+The same optimization also helps local OpenHands users who run an agent-server sandbox on their own machine. A local run is faster overall because Docker Desktop on a MacBook has more memory, local image layers, and a fast SSD compared with the Replicated VM benchmark environment, but the shape of the win is the same: the custom image avoids repeated repo and harness bootstrap work.
+
+This local benchmark uses real OpenHands `DockerWorkspace` agent-server containers and runs commands through the agent-server bash API. It is not a dry run. To keep the measurement deterministic, the code edit is scripted rather than LLM-driven.
+
+Local MacBook / Docker Desktop result, using `linux/arm64` images:
+
+| Metric | Stock image | Custom image | Speedup |
+| --- | ---: | ---: | ---: |
+| Agent-server container ready | `3.3s` | `3.4s` | `1.0x` |
+| Repo ready | `6.5s` | `0.1s` | `55.0x` |
+| Runtime bootstrap before first test | `206.8s` | prebaked | n/a |
+| First targeted test output | `218.1s` | `5.2s` | `42.3x` |
+| Full scripted workload | `224.5s` | `14.6s` | `15.3x` |
+
+Run the local benchmark:
+
+```bash
+docker build \
+  --platform linux/arm64 \
+  -f vscode-benchmark/Dockerfile \
+  -t openhands-vscode-benchmark:local-arm64 \
+  .
+
+~/.local/share/uv/tools/openhands/bin/python \
+  benchmarks/compare-vscode-local-agent-server.py
+```
+
+The local harness runs the same targeted VS Code Electron test, then applies the benchmark fix, retranspiles, and reruns the test until it passes. It uses `--no-sandbox` for the local Electron invocation because DockerWorkspace containers are not launched with the extra Linux namespace privileges Chromium's sandbox expects. That flag is local benchmark harness behavior and is separate from the Replicated VM benchmark prompts above.
+
+In the stock local run, the expensive install/setup work is inside `Runtime bootstrap before first test`, not `Agent-server container ready`. That bootstrap phase runs the repo-local setup helper, including system package checks, `npm install`, transpile, extension transpile, and Electron prep. The custom image moves that work into Docker build time, so the task-time benchmark starts with the repo and harness already prepared.
 
 ## Build your own custom image
 
@@ -105,6 +130,12 @@ That image prebakes:
 - Electron artifacts
 - native packages such as `xvfb`, `libkrb5-dev`, `pkg-config`, `libx11-dev`, and `libxkbfile-dev`
 - repo-local verification wrappers
+
+### What to bake into local images
+
+For local OpenHands use, a custom image makes sense when the same heavy setup is repeated across many tasks or sessions. Good candidates are pinned repo checkouts, package manager caches, installed dependencies, compiled or transpiled output, native system packages, browser or Electron artifacts, and stable helper scripts such as `prepare-*` and `*-verify` wrappers.
+
+Avoid baking in secrets, personal credentials, machine-specific paths, uncommitted source changes, or task-specific fixes. If the repo or dependencies change constantly, keep a lightweight `prepare-*` command in the image so the agent can refresh only the parts that need to move.
 
 ## Configure Replicated VM Installer
 

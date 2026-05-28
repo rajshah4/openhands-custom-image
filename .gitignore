@@ -3,3 +3,5 @@ monorepo/docs/reference/generated/
 monorepo/fixtures/enterprise-ballast/
 monorepo/tools/doc-search-index/
 monorepo/tools/doc-search-index.json
+benchmarks/__pycache__/
+benchmarks/results/
